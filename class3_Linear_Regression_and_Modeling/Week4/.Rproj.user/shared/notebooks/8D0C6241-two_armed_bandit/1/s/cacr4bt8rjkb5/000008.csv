@@ -1,0 +1,9 @@
+"0","library(tidyverse)"
+"0","library(statsr)"
+"0","library(statsr)"
+"0",""
+"0","library(ggplot2)"
+"0","library(dplyr)"
+"0","library(BayesFactor)"
+"2","Error in library(BayesFactor) : there is no package called ‘BayesFactor’
+"

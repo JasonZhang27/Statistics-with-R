@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1591111257837.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "625027181",
+    "id" : "946C50EF",
+    "lastKnownWriteTime" : 1591111274,
+    "last_content_update" : 1591111274624,
+    "path" : "G:/R/class4_Bayesian States/Week2/quiz2.Rmd",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "110,0",
+        "scrollLine" : "76",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

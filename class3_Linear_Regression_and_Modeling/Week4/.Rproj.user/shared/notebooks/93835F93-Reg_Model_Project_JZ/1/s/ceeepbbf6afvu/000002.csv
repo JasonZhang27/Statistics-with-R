@@ -1,0 +1,2 @@
+"0","m_imdb_mlr <- lm(formula = imdb_rating ~  thtr_rel_month  +"
+"0","     critics_score + critics_rating, data = rq_mv)"

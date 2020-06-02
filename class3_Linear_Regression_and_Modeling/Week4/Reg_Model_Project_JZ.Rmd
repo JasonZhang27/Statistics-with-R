@@ -1,0 +1,239 @@
+---
+title: "Reg_Model_Project_JZ"
+author: "Jason_Z"
+date: "5/28/2020"
+output: html_document
+---
+
+
+## Setup
+
+### Load packages
+
+```{r load-packages, message = FALSE}
+library(ggplot2)
+library(dplyr)
+library(statsr)
+library(GGally)
+library(vcd)
+
+```
+
+### Load data
+
+Make sure your data and R Markdown files are in the same directory. When loaded
+your data file will be called `movies`. Delete this note when before you submit 
+your work. 
+
+```{r load-data}
+
+load("movies.Rdata")
+
+```
+
+
+
+* * *
+
+## Part 1: Data
+
+### Generalizability
+"The data set is comprised of 651 randomly sampled movies produced and released before 2016." The statement is taken from the description page of the original data coming from. THe random sampled method is justified. 
+
+### Causality 
+There are 32 variables are listed in the data set, however not all of the variables can be used for statistical analysis or in building statistic models. One should be carefully in choosing the variables that might not be strongly dependent to each other to avoid generating unrelistic models or concluding inacurate analysis result. 
+
+There are more than one set of variables are interested to be sought for association. 
+
+
+* * *
+
+## Part 2: Research question
+Is there an association between the releasing date in theater and the rating score on IMDB and critics score and rating from rotten tomatoes?
+
+* * *
+
+## Part 3: Exploratory data analysis
+Let's first to parse the data, see what data types we have and each contains how many variables.
+
+```{r}
+#using table(sapply()) to parse the data to look for count of each data type
+table(sapply(X = movies, FUN = class))
+
+```
+It is clearly see we have four different types of data in our data set. Let us start digging into some non-numeric data analysis.
+
+We can start to look at the genre of the data and plot the number of counts using a bar plot.
+```{r}
+
+ggplot(movies,aes(x = genre)) + geom_bar()
+summary(movies$genre)
+
+305/651
+
+```
+Interesting results, isn't it ? It seems like the movie genre is dominated by the Drama(46.85%). Does that mean we are rejecting the random sampling because almost the half of the movies falls into the same category? Before we can be so assertive on that, let's mine more information out of the data.
+
+## Testing the Generalizability
+What else we can look at? Maybe we can look at the releasing year in theater and director who directed the movie. Why are we interested into those variables? The investigation in the year of releasing can help us to determine whether the movise are not random sampled up to date. And for analyzing the directors/actors to avoid that the data were sampled towards to a particular director or an actor.
+
+### Releasing year investigation
+Investigate how many movies were released each year up to date and find out if the most productive year of releasing the movies.
+```{r}
+#some analysis
+table(movies$thtr_rel_year)
+
+max(table(movies$thtr_rel_year))
+
+
+nrow(subset(movies, genre == "Drama" & thtr_rel_year == 2006))
+
+nrow(subset(movies, genre == "Drama" & thtr_rel_year == 2007))
+
+```
+From the summary above, there are 33 movies were released in two particular year 2006 and year 2007. And those released movies in those two years are Drama type only 16 and 17 respectively. Out of 651 sampled movies, that is less than 5%. In this case, we exclude the dependence between the releasing year and the random sampled method.
+
+### Director name or actor name investigation
+
+Similarly, we can proceed to seek for if the observations are based on a particular director or a particular actor.
+```{r}
+#The most number of the movies produced by certain director
+max(table(movies$director))
+
+
+#The most number of the movies have the same actor1 paticipated in. 
+max(table(movies$actor1))
+#The most number of the movies have the same actor2 paticipated in. 
+max(table(movies$actor2))
+#The most number of the movies have the same actor3 paticipated in. 
+max(table(movies$actor3))
+#The most number of the movies have the same actor4 paticipated in. 
+max(table(movies$actor4))
+#The most number of the movies have the same actor5 paticipated in. 
+max(table(movies$actor5))
+
+
+```
+As we expected, the results of the movies with the most number of actor in and the most number of directors filmed all shows less than 5% of total sample population.
+
+In this case, we can confirm that the movies were random sampled from the all movies from 1970 and up to date. There are more than 10% of the movies are "Drama" just by chance.Or we can see, the Drama movies has been leading the trend over the years. 
+
+Yeah, right; who doesn't like "Drama" around?
+
+### Research Question Variables
+Let's put all the variables that we are going to analysis together and create a new data frame to include all variables in the research qeustions and name is rq_mv.
+```{r}
+rq_mv <- movies %>% select(thtr_rel_year,thtr_rel_month,thtr_rel_day,imdb_rating,critics_score,critics_rating)
+
+```
+
+We 
+
+
+* * *
+
+## Part 4: Modeling
+
+We first build our linear regression model
+```{r}
+
+imdb_mlr = lm(imdb_rating~ thtr_rel_year+ thtr_rel_month + thtr_rel_day + critics_score+critics_rating, data = rq_mv)
+
+summary(imdb_mlr)
+
+```
+We can also do ANOVA on the model we built to test the independece of each variable to the other.
+
+```{r}
+Anova_results <- aov(imdb_mlr)
+
+summary(Anova_results)
+```
+
+A paired plot could tell us more information on the multi-linearity of the research data set. In the paired plot below, we plot all 6 variables in cluding "imdb_rating", "thtr_rel_year", "thtr_rel_month", "thtr_rel_day", "critics_score","critics_rating" and filled the color with a categorical variables "critics_rating".
+
+```{r}
+rq_mv %>% ggpairs(columns = c("imdb_rating", "thtr_rel_year", "thtr_rel_month", "thtr_rel_day", "critics_score","critics_rating"),aes(color = critics_rating),diag = list(continuous= wrap("densityDiag",alpha=0.5)))
+
+```
+
+The paired plot showed us the linearities among the variables. The correlation between critics_score and the imdb_rating have highest correlation. Which makes sense that the critics and the imdb rating of the movies are associated with each other.
+
+
+* * *
+
+## Part 5: Prediction
+In building the prediction model, we are expecting to find the parsimonius model, which means the simpliest model with highest power predictor. In the other words, we need to find what does the imdb score mostly correlated to, so we have to drop the 6 variables down to the least number of variables but yield the highest prediction power. 
+
+### Stepwise Model Selection
+There are several methods we could utilize to find the best fit model. Two famous methose are forward selection and back eliminations. Since we only have 6 variables in our research data set, we can use the backward elimination to drop one predictor at a time until we reach our parsimonious model.
+
+#### Back Elimination: Step 1 
+Let's review our full multi-linear regression modle as we did in the previous section.
+
+```{r}
+summary(imdb_mlr)
+```
+Since the R squared value will always positively associated with the number of the variables, to focus on the R squared value to reach our best fit model seems impossible. In this case, we will look at two criteria: the p-value and adjusted R^2 to reach the maximum adjusted R-squared.
+
+start looking at p-values, the "thrt_rel_day" stands out by its high p-value at 0.91387, remember that the lowerst the p-value, the more significant of the variable is.
+
+Let's drop the "thrt_rel_year" variable to see if the ajusted R-squared value increases.
+
+```{r}
+#eliminate the "thrt_rel_day"
+summary(lm(formula = imdb_rating ~
+             thtr_rel_year + thtr_rel_month +  
+    critics_score + critics_rating, data = rq_mv))
+```
+Seems like our adjusted R-squared increases from 0.5952 to 0.5958, it didn't vary too much on the adjusted R-squared. Let's move on to remove different variable instead of the thtr_rel_day to confirm that the p-value is the key criteria we can use to eleimante less significant predictor to increase our model.
+
+It is tideous to run several times on the model to finde the best correlation. Here is the list of adjusted R-squared values that corresponds to eliminated variables
+“thtr_rel_year”, “thtr_rel_month”, “critics_score”,“critics_rating” are 0.5951, 0.5939, 0.4032, 0.586.
+
+
+### Dropping Categorical Variable?
+Remember that the "critics_rating" is a categorical variable and has three sub-variables: "rotten", "fresh", "certified fresh". The categorical variable cannot be dropped separately, they must be kept or dropped at the same time. Recap that the critics_ratingRotten yields a 0.00691 in the original analysis, hence having some significance in the model, so we could decide to keep the categorical at first and eliminate as we run different elimination step if necessary.
+
+#### Back Elimination: Step 2
+As we use the elimination method based on criteria of p-value, we can then drop the "thtr_rel_year" with p-value of 0.83906. 
+
+```{r}
+ summary(lm(formula = imdb_rating ~  thtr_rel_month  +
+     critics_score + critics_rating, data = rq_mv))
+```
+After the elimination the "thtr_rel_year" variable, the adjusted R-squared value did not change at all while eliminating other variables will result in a decrease in adjusted R-squared. Should we eliminated it even there is no change?
+
+The answer is yes, becase the definition or the parsimonious model is to have simplest model with high power predictor. Adding one more variables would add more complexity to the model, hence we drop the variable at this point.
+
+The final prediction model only contains "thtr_rel_month", "critics_score",  "critics_rating". The summary of the model is shown in the above R chunk.
+
+The prediction model is created as follow
+
+```{r}
+m_imdb_mlr <- lm(formula = imdb_rating ~  thtr_rel_month  +
+     critics_score + critics_rating, data = rq_mv)
+```
+
+
+### Testing the Prediction Model
+Let's create a new data frame with "critics_rating" as Rotten, "thtr_rel_month" as may(5) and the "critics_score" as 32. 
+```{r}
+new_imdb <- data.frame(critics_rating = "Rotten", thtr_rel_month = 5, critics_score = 32)
+```
+
+then we predict the new imdb score using predict function
+
+```{r}
+predict(m_imdb_mlr,new_imdb)
+```
+
+* * *
+
+## Part 6: Conclusion
+To conclude the linear regression and modeling project. The objective is to predict the imdb score of a movie that based on 6 variables were taken from the original data set. There variables are "imdb_rating", "thtr_rel_year", "thtr_rel_month", "thtr_rel_day", "critics_score","critics_rating".
+
+Then the backward elimination method was utilized to reach parsimonious model which contains three variables "critics_rating", "thtr_rel_month" and the "critics_score". 
+
+
+

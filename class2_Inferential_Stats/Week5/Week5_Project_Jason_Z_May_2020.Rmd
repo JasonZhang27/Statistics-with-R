@@ -1,0 +1,157 @@
+---
+title: "Statistical inference with the GSS data"
+output: 
+  html_document: 
+    fig_height: 4
+    highlight: pygments
+    theme: spacelab
+---
+
+## Setup
+
+### Load packages
+
+```{r load-packages, message = FALSE}
+library(ggplot2)
+library(dplyr)
+library(statsr)
+library(varhandle)
+library(janitor)
+```
+
+### Load data
+
+Make sure your data and R Markdown files are in the same directory. When loaded
+your data file will be called `gss`. Delete this note when before you submit 
+your work. 
+
+```{r load-data}
+load("gss.Rdata")
+```
+
+
+
+* * *
+
+## Part 1: Data
+### Generalizability:
+
+The survey was not only voluntary but random assigned to 50,000 househelds across the country, 62,400 total GSS participants were pre-screened down to 5,200 eligible participants to respond the survey. Though pre-screen procedure was used to generate the final results of the survey due to variable reasons, the result is believed to generalize the entire population of the househelds of the United States in this analysis.
+
+
+Detailed Information about sample selection can be found at "http://gss.norc.org/For-Survey-Participants"
+
+
+### Resaoning for causality:
+
+As stated above, the results were pre-screened, only useful survey results were kept. Participants were drawn from across the country, the explanatary variables are questions asked on the survey and the response variables are the answers from those partipants. It is reasonable for us to believe the answers are associated with the questions asked on the survey. 
+
+
+* * *
+
+## Part 2: Research question
+### How does people from different region associated with whether the governments should improve the standard of living of all poor americans?
+
+
+* * *
+
+## Part 3: Exploratory data analysis
+
+The first step is to parse the data
+
+```{r}
+#select different categorical data into into one data frame, get rid of NA resppnses
+
+research_question <- select(gss, year, region, helppoor) %>% na.omit() 
+
+
+# add new two columsn, one is categorize the time into recent and historical by year 2005, the other one is to categorize based on whether people only agree with that the government should suppor the poor. 
+research_question <- research_question %>% mutate(recent = as.factor(ifelse(year >=2005,"R","H"))) %>% mutate(Govrn_intervene = grepl("Govt Action",helppoor)) 
+
+ 
+```
+
+
+Generate probability table that shows whether people only agree the government supporting the poor according to where they coming from.
+```{r}
+working_data <- research_question
+working_data_table <- table(working_data$region,working_data$Govrn_intervene)
+
+prop.table(working_data_table)
+
+```
+
+```{r}
+#plot the different opinion of people whethat only agree with 
+plot1 <- ggplot(working_data) + aes(x = region, fill = Govrn_intervene)+geom_bar(position = 'fill') + labs(x = "Paticipants Regions", y = "Proportion", title = "Impart of Region of Residence on Whether only Agree with the \n Government Should Support the Poor") + scale_fill_discrete(name = "Opinion", labels= c("Only Agree Governemnt Intervene","Self support and agree both self and govt support"))
+
+plot1
+
+```
+
+Compare wether recent data and historical data separately
+
+```{r}
+#historical data and recent data
+
+hist_workingdata <- working_data %>% filter(recent == "H")
+hist_workingdata_table <- table(hist_workingdata$region,hist_workingdata$Govrn_intervene)
+
+
+recent_workingdata <- working_data %>% filter(recent == "R")
+recent_workingdata_table <- table(recent_workingdata$region,recent_workingdata$Govrn_intervene)
+```
+
+
+```{r}
+#plot recent and historical data
+ggplot(hist_workingdata) + aes(x = region, fill = Govrn_intervene)+ geom_bar(position = 'fill')+labs(title="before 2005")
+
+ggplot(recent_workingdata) + aes(x = region, fill = Govrn_intervene)+ geom_bar(position = 'fill')+labs(title="After 2005")
+
+```
+
+
+Next, compare the changes of different opinion of people whethat only agree with before and after 2005 into one plot
+```{r}
+
+#plot the changes of different opinion of people whethat only agree with before and after 2005 
+plot2 <- ggplot(working_data) + aes(x = recent, fill = Govrn_intervene)+geom_bar(position = 'fill') + labs(x = "Paticipants Regions", y = "Proportion", title = "Impart of Region of Residence on Whether only Agree with the \n Government Should Support the Poor") + scale_fill_discrete(name = "Opinion", labels= c("Only Agree Governemnt Intervene","Self support and agree both self and govt support"))+ facet_grid(.~region)
+
+plot2
+
+```
+
+
+
+* * *
+
+## Part 4: Inference
+### Hypothesis test:
+
+H_0: The people having only agreement oponion on whether the government should support the poor is independent from which region they come.
+HA: There is a dependent relationship between the agreement opinion and region.
+
+### Method using
+There are two categorical variables, region and opinion, and more than 2 levels, hence Chi-square test of independence will be used.
+
+## Inference
+
+```{r}
+#for historical
+c_hist <- chisq.test(hist_workingdata$region,hist_workingdata$Govrn_intervene)
+
+#for resent
+c_recent <- chisq.test(recent_workingdata$region,recent_workingdata$Govrn_intervene)
+
+#for total 
+c_total <-chisq.test(working_data$region,working_data$Govrn_intervene)
+
+c_hist
+c_recent
+c_total
+```
+
+## Conlcusion
+All the X-Squared are more thant 5, which can be interpreted as the probablities are far way at the right tail. As in fact if there is an independent relationship among the variables, we should observe more than 5% in p-value. However the p-value is significantly smaller than 5%, hence we conclude that the null hypothesis is rejected. There is no convincing evidence can prove there is indepence between people's opinion on agree that whether goverment should suppor the poor, in the other words, there is a dependent relationship between the two.
+

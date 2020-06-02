@@ -1,0 +1,85 @@
+---
+title: "Lecture_notes"
+author: "Jason_Z"
+date: "5/27/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# load data
+
+```{r}
+states = read.csv("http://bit.ly/dasi_states")
+
+
+```
+
+
+
+```{r}
+#predicting poverty
+pov_mlr = lm(poverty ~ female_house + white, data = states)
+summary(pov_mlr)
+
+```
+```{r}
+#testing the variability using ANOVA
+
+anova(pov_mlr)
+
+
+
+```
+
+## Adjusted R^2
+
+previously R^2 can be calculated by using formula R^2 = SSE/SST
+
+Adjusted R^2 is taking account with only valuable variables.
+
+
+```{r}
+# R^2 adjusted = 1-(SSE/SST)*((n-1)/(n-k-1))
+
+R_squared_adjusted <- 1-(339.49/480.25)*((51-1)/(51-2-1))
+
+R_squared_adjusted
+# compared to previously calculated as (480.25-339.49)/480.25 = 30.5%
+# R^2 adjusted is always smaller than R^2
+```
+## definition of R-squared is to show the percentage of variability in the response variable explained by the model.
+## definition of R-squared adjusted has a penalty for the number of predictor included in the model.
+
+
+
+# Inference for multiple regression and model selection
+
+load data 
+```{r}
+#load data
+
+cognitive = read.csv("http://bit.ly/dasi_cognitive")
+
+```
+
+```{r}
+#full model
+
+cog_full = lm(kid_score~mom_hs + mom_iq + mom_work + mom_age, data = cognitive)
+
+summary(cog_full)
+```
+'''
+df = n-k-1
+'''
+df = 434 - 4 - 1 
+
+
+F-statistics = 29.74
+
+p-value: < 2.2e-16
+
+p-value tells us the combination of the variables do not yield a good model

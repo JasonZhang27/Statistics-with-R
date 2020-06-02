@@ -1,0 +1,189 @@
+---
+title: "Exploring the BRFSS data"
+output:
+  html_document:
+    fig_height: 4
+    highlight: pygments
+    theme: spacelab
+  pdf_document: default
+  word_document: default
+---
+
+## Setup
+
+### Load packages
+
+```{r load-packages, message = FALSE}
+library(ggplot2)
+library(dplyr)
+```
+
+### Load data
+
+Make sure your data and R Markdown files are in the same directory. When loaded
+your data file will be called `brfss2013`. Delete this note when before you submit 
+your work. 
+
+```{r load-data}
+load("brfss2013.RData")
+```
+
+
+
+* * *
+Student name: Jason Zhang 
+| Week 5 - Integrated Data Analysis Project
+| May-15-2020
+
+Objective:
+The objective of this project is to investigate the data from BRFSS2013 Survey to perform analysis on the given data. 
+
+## Part 1: Data
+The structure of given data can be retreived using ```dim()``` command. The command returns to corresponding rows and columns of the given data.
+```{r}
+dim(brfss2013)
+```
+The ```brfss2013.RData``` is a dataframe with 491,775 observations for 330 variables. However, not all the observations are valuable, one needs to investigate the data and find out the valuable inforamtion for analysis.
+
+
+
+
+* * *
+
+## Part 2: Research questions
+
+**Research quesion 1:**
+What are potential factors that are asscoiated with behavioral risk factors for the non-institutionalized adult population residing in the US.
+
+**Research quesion 2:**
+How often people do routine checkup with insuranced covered or not geographically?
+
+**Research quesion 3:**
+Are there any association of education level to the income between male and female?
+
+* * *
+
+## Part 3: Exploratory data analysis
+
+NOTE: Insert code chunks as needed by clicking on the "Insert a new code chunk" 
+button (green button with orange arrow) above. Make sure that your code is visible
+in the project you submit. Delete this note when before you submit your work.
+
+**Research quesion 1:**
+How does the smoking behavor impact length of sleep for both males and females?
+
+```{r}
+aa<-select(brfss2013,sleptim1,smokday2,sex)%>%filter(!is.na(sleptim1),!is.na(smokday2),!is.na(sex))
+```
+
+Select target parameters for summary
+```{r}
+aa%>%group_by(sleptim1,smokday2,sex)%>%summarize(count=n())
+```
+Table of summary is shown for people with different somking behavoir ranked by their length of sleep. 
+
+It might be fishy by looking at the summary of length of sleep. There some observations showing that 1 hour or 24 hour of sleep during the day were selected by some people. It is necessary to look for basic stats of people sleep time to see if the whole survey is believable.
+```{r }
+aa %>% select(sleptim1)%>%summarise(mean_dd = mean(sleptim1), sd_dd = sd(sleptim1), n = n())
+```
+The basic states show that the median of the length of sleep time for over 210,000 observations is ~7 hours with standard deviation of 1.56. Which the results are resaonable. 
+
+The next step to plot to investigate whether people with different somking behavior have different sleep time during the day.
+```{r}
+ggplot(data=aa,aes(x= smokday2,y=sleptim1,fill=smokday2))+ geom_boxplot() + theme(axis.text.x = element_text(angle = 60,vjust=1,hjust=1))+facet_grid(.~sex) + xlab("smoke daily frequency")+ylab("sleeptime")+stat_summary(fun.y = mean,color = "red",geom = "point")
+```
+
+It seems like the smoking behavior has no significane impact on length of sleep for both males and females. The boxplot shows silmilar median for both males and females at different frequency of smoking during the day.The color to distinguish people with different somking behavior.Mean value for each category has been identified by the red dot on the each boxes. 
+
+**Research quesion 2:**
+How often people do routine checkup with insuranced covered or not geographically? 
+
+The first step is to filter the BRFSS2013 data to get rid of NA observations.
+```{r}
+#What is the count for people with different education level
+bb<-select(brfss2013,hlthpln1,checkup1,X_state)%>%filter(!is.na(hlthpln1),!is.na(checkup1),!is.na(X_state),X_state!=0)
+
+```
+After filtering the survey, there are 483,731 observations. Now we look at summary of all three variables by their separate frequency of each variable
+
+
+```{r  }
+#Summary of three variables by frequency
+bb%>%summary()
+```
+
+For checkups
+
+The percentage and counts of frequency people doing checups is shown as follow
+```{r}
+ summarise(group_by(bb,checkup1), count=n(), per_col=count/nrow(bb)*100)
+```
+
+figure is shown as follow
+```{r}
+ggplot(bb,aes(x=checkup1))+geom_bar()
+```
+Which states are people who took the survey at.
+
+The distribution is shown as follow
+```{r}
+ summarise(group_by(bb,X_state), count=n(), per_col=count/nrow(bb)*100)
+```
+
+figure is shown as follow
+```{r}
+ggplot(bb,aes(x=X_state))+geom_bar()+theme(axis.text.x = element_text(angle = 90,vjust=1,hjust=1))
+
+```
+
+The summary of people covered by insurance or not.
+
+```{r}
+ summarise(group_by(bb,hlthpln1), count=n(), per_col=count/nrow(bb)*100)
+```
+
+figure is shown as follow
+```{r}
+ggplot(bb,aes(x=hlthpln1))+geom_bar()
+
+```
+
+To sum up, invesigate frequency by states and whether covered by insurances
+
+
+```{r}
+#People with insurence
+summarize(group_by(bb,hlthpln1,checkup1,X_state)%>%filter(hlthpln1 == "Yes"),count=n(),per_col= count/nrow(bb)*100)%>%arrange(desc(per_col))
+```
+
+```{r}
+#People without insurence
+summarize(group_by(bb,hlthpln1,checkup1,X_state)%>%filter(hlthpln1 == "No"),count=n(),per_col= count/nrow(bb)*100)%>%arrange(desc(per_col))
+
+```
+
+According to the BRFSS 2013 survey, there are 88.79% participants had insurance plan while 11.21% not. for the past year, Florida has both highest count of people that have/not have insurance and did routine checkup. The percentage are 4.85% and 0.429% repectively.
+
+
+
+**Research quesion 3:**
+The purpose of this research is to investigate the association of education level to the income between male and female. 
+
+The first step is to locate three parameters are investigated are ```educa```,```income2```,```sex```.The whole data frame ```brfss2013```is renamed to ```cc``` and trimed using ```!is.na``` to eliminate```NA```observations. 
+```{r}
+cc<-select(brfss2013,educa,income2,sex)%>%filter(!is.na(educa),!is.na(income2),!is.na(sex))
+```
+The new trimed data frame with valid counts can be summarized as follow
+
+```{r}
+cc%>% group_by(educa,income2,sex)%>%summarize(count=n())
+```
+
+Then the association of ```educa```and```income2``` between sex can be ploted using ```ggplot``` based on the count number.
+```{r} 
+ggplot(data=cc,aes(x = income2,y=educa))+ geom_count() + theme(axis.text.x = element_text(angle = 60,vjust=1,hjust=1))+facet_grid(.~sex) + xlab("income level")+ylab("education level")
+```
+
+A interesting phenomenone is show based on the plot shown above. Regardless of male or female, one tends to have higher income abover $75,000 with educational level above grade 12 or GED. While reverse trend is observed on ones with education level below grade 12 or GED. With people who have grade 12 or GED, more females are in the range of from less than $10,000 to less than $25,000 while males have slightly higher income above $25,000 based on the survey.
+
+

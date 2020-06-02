@@ -1,0 +1,2 @@
+"0","rq_mv <- movies %>% select(thtr_rel_year,thtr_rel_month,thtr_rel_day,imdb_rating,critics_score,critics_rating)"
+"0",""

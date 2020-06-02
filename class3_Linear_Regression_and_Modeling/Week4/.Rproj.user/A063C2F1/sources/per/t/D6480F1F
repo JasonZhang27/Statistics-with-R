@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1591053844670.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2006527751",
+    "id" : "D6480F1F",
+    "lastKnownWriteTime" : 1591057797,
+    "last_content_update" : 1591057797035,
+    "path" : "G:/R/class4_Bayesian States/Week2/credible_interval.Rmd",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "448,0",
+        "scrollLine" : "435"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}
